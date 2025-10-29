@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>你要天天开心</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+
+    .control-btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #42b983;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .control-btn:hover {
+      background-color: #359e75;
+    }
+
+    .popup {
+      position: fixed;
+      padding: 20px 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      font-family: "仿宋", "FangSong", serif;
+      font-size: 20px;
+      z-index: 1000;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 5px;
+      right: 10px;
+      background: none;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      color: rgba(0, 0, 0, 0.6);
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    /* 弹出动画（淡入效果） */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .popup-enter {
+      animation: fadeIn 0.5s ease forwards;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- 控制按钮 -->
+    <button 
+      class="control-btn" 
+      @click="startPopups" 
+      :disabled="isStarting"
+    >
+      {{ isStarting ? '一定要开心哦宝宝...' : '宝宝请你点击这个位置' }}
+    </button>
+
+    <!-- 弹窗列表 -->
+    <div 
+      v-for="(popup, index) in popups" 
+      :key="index"
+      class="popup popup-enter"
+      :style="{
+        top: popup.top + 'px',
+        left: popup.left + 'px',
+        backgroundColor: popup.bgColor,
+        color: popup.textColor,
+        width: popup.width + 'px',
+        height: popup.height + 'px',
+        zIndex: 1000 + index
+      }"
+    >
+      {{ popup.content }}
+      <button class="close-btn" @click="closePopup(index)">×</button>
+    </div>
+  </div>
+
+  <script>
+    const { createApp } = Vue;
+
+    createApp({
+      data() {
+        return {
+          popups: [], // 弹窗列表
+          isStarting: false, // 是否正在生成
+          // 温馨提示内容
+          contents: [
+            "好好吃饭", "按时睡觉", "别熬夜", "天天开心",
+            "照顾好自己", "保持好心情", "万事如意", "健康",
+            "事业有成", "天冷了，多穿衣服", "好好爱自己",
+            "记得好好护肤", "今天过得开心嘛", "梦想成真",
+            "你超棒的", "珍惜每一刻", "早点休息", "金榜题名",
+            "享受当下", "平安顺遂", "多喝热水", "坚持运动"
+          ],
+          // 颜色列表
+          colors: [
+            "#F08080", "#FFA07A", "#FFD700", "#90EE90",
+            "#ADD8E6", "#EE82EE", "#F0E68C", "#DDA0DD",
+            "#FFB6C1", "#87CEEB", "#98FB98", "#FFC0CB",
+            "#C0C0C0", "#FF6347", "#40E0D0", "#9ACD32"
+          ]
+        };
+      },
+      methods: {
+        // 开始生成弹窗
+        startPopups() {
+          if (this.isStarting) return;
+          
+          this.isStarting = true;
+          this.popups = []; // 清空现有弹窗
+          
+          // 生成90个弹窗
+          const total = 120;
+          const interval = 120; // 每个弹窗间隔时间（毫秒）
+          
+          for (let i = 0; i < total; i++) {
+            // 定时生成弹窗
+            setTimeout(() => {
+              this.addPopup();
+              
+              // 最后一个弹窗生成后恢复按钮状态
+              if (i === total - 1) {
+                this.isStarting = false;
+              }
+            }, i * interval);
+          }
+        },
+        
+        // 添加单个弹窗
+        addPopup() {
+          // 窗口尺寸
+          const width = 200 + Math.random() * 80;
+          const height = 100 + Math.random() * 50;
+          
+          // 随机位置（确保在可视范围内）
+          const maxLeft = window.innerWidth - width - 40;
+          const maxTop = window.innerHeight - height - 40;
+          const left = 20 + Math.random() * maxLeft;
+          const top = 20 + Math.random() * maxTop;
+          
+          // 随机颜色
+          const bgColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+          
+          // 计算文字颜色（确保对比度）
+          const rgb = this.hexToRgb(bgColor);
+          const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+          const textColor = luminance > 0.7 ? '#333' : '#fff';
+          
+          // 随机内容
+          const content = this.contents[Math.floor(Math.random() * this.contents.length)];
+          
+          this.popups.push({
+            top,
+            left,
+            width,
+            height,
+            bgColor,
+            textColor,
+            content
+          });
+        },
+        
+        // 关闭弹窗
+        closePopup(index) {
+          this.popups.splice(index, 1);
+        },
+        
+        // 辅助函数：十六进制颜色转RGB
+        hexToRgb(hex) {
+          const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+          return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+          } : { r: 255, g: 255, b: 255 };
+        }
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
